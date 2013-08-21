@@ -1,0 +1,317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+	<head>
+		<title>ADO JavaScript Client-Only Access Application</title>
+		
+		<!-- All Code is Contained within the Script Tags -->
+		<script>
+
+			/** 
+
+				This is simple application written in HTML and JavaScript that uses Microsoft
+				ADO to access Microsoft Access Database and web browser DOM interface to
+				dynamically change this web page. The file extension ".hta" is an HTML
+				application that must be executed using Microsoft Internet Explorer. This
+				example is self-contained-- all code is contained in this single file.
+
+				This application works by display a simple menu of three options with links:
+					Show List of Hotels
+					Search for a Hotel using SQL Injection Vulnerable Code
+					Search for a Hotel using Secure Code
+
+				Each menu option is linked to a JavaScript function using web browser's
+				"onclick=''" event syntax. The onclick code is executed when you click on
+				corresponding menu option link.
+				
+				You should not that the HTML <Body> is divided into three sections using
+				<div> elements-- MenuSection, FormSection, and OutputSection-- each with a
+				unique id="" parameter. This allows the JavaScript code to update the
+				HTML of these 	sections dynamically using web browser DOM reference on
+				innerHTML (document.all.<sectionID>.innerHTML = "new html").
+				
+				Menu Option: Show List of Hotels
+				
+					- Just produces a list of all hotels from database in the OutputSection
+					
+				Menu Options: Search for a Hotel....
+				
+					- Display a HTML Form in the FormSection to gather further input from
+					  the user -- a city name
+					- The form's "Search" button to link to a JavaScript function to process
+					  the form input (city name), execute SQL, and show results in OutputSection
+					- The only difference between the two Search for Hotel options is one using
+					  unsecure (vulnerable) code while the other uses secure coding method.
+				
+				References:
+					HTML				http://www.w3schools.com/html/default.asp
+					JavaScript			http://www.w3schools.com/js/default.asp
+					JavaScript and DOM 	http://www.w3schools.com/js/js_htmldom_html.asp
+					ADO					http://www.w3schools.com/ado/ado_ref_command.asp
+
+			*/
+
+			/**
+			 Return a relative path to the current web page with respect to its source file
+			 
+			 @return (String) the relative file path (directory)
+			 */
+			function getPath()
+			{
+				var strPath = document.URLUnencoded;
+				strPath = strPath.substring(8,strPath.lastIndexOf("/")+1);
+				return strPath;
+			}
+
+			/**
+			  Display an HTML <FORM> for getting city name for searching
+			  the Hotel database. Updates the <DIV> section identified by
+			  the ID "FormSection" with an HTML<FORM>. Sets up a button 
+			 
+			  @param (string) outputFunction The name of the function to call on "Search" button click.
+		     
+			  @return (string) The relative file path (directory)
+			 */
+			function formSearchHotel(outputFunction)
+			{
+				// Updates the FormSection with an HTML <FORM> for City Name to use in Search
+				var strHTML = new String();
+				strHTML += "<form name=\"SearchHotel\">";
+				strHTML += "<h2>Search for Hotel On City (Secure - Not Vulnerable to SQL Injection)</h2>";
+				strHTML += "<p>City: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
+				strHTML += "<p>Try <em>London</em> (Normal User Input) versus <em>London' OR ''='</em> (SQL Injection Attack)></p>";
+				strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
+				strHTML += outputFunction;
+				strHTML += "(&quot;OutputSection&quot;);\">";
+				strHTML += "</form>";
+				
+				// Update Current View
+				document.all.FormSection.innerHTML = strHTML;
+				document.all.OutputSection.innerHTML = "";
+		
+			}
+			
+			/**
+			  A secure code implementation of an SQL parameterized search where the user is supplying
+			  arguments to the SELECT statement.
+			 
+			  @param (string) strID The section of the HTML page to display the output (e.g. OutputSection).
+			 */
+			function searchHotelSecure(strID)
+			{
+				// Access 2007 and Later
+				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Access 2003 and Earlier
+				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Open Connection
+				var oConnection = new ActiveXObject("ADODB.Connection");
+				oConnection.Open(strConnection);
+				
+				// Create SQL Statement String
+				var strSQL = new String();
+				strSQL = "SELECT * FROM Hotel WHERE City=[CityParameter]ORDER BY hotelName";
+				
+				// Prepare Parameterized Command
+				var oCommand = new ActiveXObject("ADODB.Command");
+				oCommand.ActiveConnection = oConnection;
+				oCommand.CommandText = strSQL;
+				var parm1 = oCommand.CreateParameter("CityParameter",200,1,50);
+				parm1.Value = document.forms("SearchHotel").item("city").value;
+				oCommand.Parameters.Append(parm1);
+				
+				// Execute Command and Return Resulting Record Set
+				var rsQuery = oCommand.Execute();
+				
+				// Generate HTML Table with Query Results
+				var strHTML = new String();
+				strHTML += "<table width=\"100%\">"
+				while (!rsQuery.EOF)
+				{
+					strHTML += "<tr><td>" + rsQuery("hotelName") + "</td><td>" +
+						rsQuery("city") + "</td></tr>";
+					rsQuery.MoveNext();
+				}
+				strHTML += "</table>";
+				
+				// Update Current View
+				document.all.item(strID).innerHTML = strHTML;
+				
+				// Conclusions
+				oConnection.Close();
+			}
+
+			/**
+			  A vulnerable code implementation of an SQL parameterized search where the user is supplying
+			  arguments to the SELECT statement. This code is vulnerable to SQL Injection attacks.
+			 
+			  @param (string) strID The section of the HTML page to display the output (e.g. OutputSection).
+			 */
+			function searchHotelUnsecure(strID)
+			{
+				// Access 2007 and Later
+				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Access 2003 and Earlier
+				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Open Connection
+				var oConnection = new ActiveXObject("ADODB.Connection");
+				oConnection.Open(strConnection);
+				
+				// Execute a Read Only Query - Subject To SQL INJECTOR Errors
+				var strSQL = new String();
+				strSQL = "SELECT * FROM Hotel WHERE City='" +
+					document.forms("SearchHotel").item("city").value + "' ORDER BY hotelName";
+				var rsQuery = oConnection.Execute(strSQL);
+				
+				// Generate HTML Table with Query Results
+				var strHTML = new String();
+				strHTML += "<table width=\"100%\">"
+				while (!rsQuery.EOF)
+				{
+					strHTML += "<tr><td>" + rsQuery("hotelName") + "</td><td>" +
+						rsQuery("city") + "</td></tr>";
+					rsQuery.MoveNext();
+				}
+				strHTML += "</table>";
+				
+				// Update Current View
+				document.all.item(strID).innerHTML = strHTML;
+				
+				// Conclusions
+				oConnection.Close();
+			}
+
+			// showHotel - Output a List of Hotels to Output Window
+			function showHotel(strID)
+			{
+				//document.write('hello johnny');
+				// Access 2007 and Later
+				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Access 2003 and Earlier
+				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Open Connection
+				var oConnection = new ActiveXObject("ADODB.Connection");
+				oConnection.Open(strConnection);
+				
+				
+				
+				// Execute a Read Only Query
+				var rsQuery = oConnection.Execute("SELECT * FROM Hotel ORDER BY hotelName,city");
+				
+				// Generate HTML Table with Query Results
+				var strHTML = new String();
+				strHTML += "<table width=\"100%\">"
+				while (!rsQuery.EOF)
+				{
+					strHTML += "<tr><td>" + rsQuery("hotelName") + "</td><td>" +
+						rsQuery("city") + "</td></tr>";
+					rsQuery.MoveNext();
+				}
+				strHTML += "</table>";
+				
+				// Update Current View
+				document.all.FormSection.innerHTML = "";
+				document.all.item(strID).innerHTML = strHTML;
+				
+				// Conclusions
+				oConnection.Close();
+			}
+			
+			
+			function DisplayReport(brewID)
+			{
+				var divName = "report" + brewID;
+				//document.all.FormSection.item(divName).innerHTML = brewID;
+				document.getElementById(divName).innerHTML = brewID;
+			}
+			
+			function exec_query(strID)
+			{
+				// Access 2007 and Later
+				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
+				
+				// Access 2003 and Earlier
+				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				
+				// Open Connection
+				var oConnection = new ActiveXObject("ADODB.Connection");
+				oConnection.Open(strConnection);
+				
+				// Create SQL Statement String
+				var strSQL = new String();
+				strSQL = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter]  ORDER BY [Brew Name]";
+				//AND [Country of Origin] <> NULL
+				// Prepare Parameterized Command
+				var oCommand = new ActiveXObject("ADODB.Command");
+				oCommand.ActiveConnection = oConnection;
+				oCommand.CommandText = strSQL;
+				var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
+				
+				var filter = document.forms("SearchHotel").item("city").value;
+				parm1.Value = (filter) ? filter : "%";
+				oCommand.Parameters.Append(parm1);
+				
+				// Execute Command and Return Resulting Record Set
+				var rsQuery = oCommand.Execute();
+				
+				// Generate HTML Table with Query Results
+				var strHTML = new String();
+				strHTML += "<table width=\"100%\">"
+				while (!rsQuery.EOF)
+				{
+					var brewID = rsQuery("Brew ID");
+					//var brewID = 99;
+					
+					//"<a href='#' onClick='DisplayReport(99)'>" + brewID + 
+					//"</a>" +
+					//"<div id='report" + brewID + "'></div>" + 
+					
+					strHTML += "<tr><td>" + 
+						"<a href='#form' onClick='DisplayReport(" + brewID + ")'>" +
+						rsQuery("Brew Name") + "</td><td>" + 
+						"</a>" +
+						rsQuery("Country of Origin") + "</td></tr>" + 
+						"<tr><td><div id='report" + brewID + "'></div></td></tr>";
+					rsQuery.MoveNext();
+				}
+				strHTML += "</table>";
+				
+				// Update Current View
+				document.all.item(strID).innerHTML = strHTML;
+				
+				// Conclusions
+				oConnection.Close();
+			}
+			
+		</script>
+
+	</head>
+	
+	
+	<!--  Core HTML Page -->
+	<body>
+		<a name="home"/>
+		<h1>ADO Programming Example</h1>
+		<h2>Select an Option</h2>
+		<div id="MenuSection">
+			<button onclick="formSearchHotel(&quot;exec_query&quot;);" >Show List of Donujts</button>
+			<br/>
+			<a href="#home" onclick="showHotel(&quot;OutputSection&quot;);" >Show List of Hotels</a>
+			<br/>
+			<a href="#home" onclick="formSearchHotel(&quot;searchHotelUnsecure&quot;);" >Search for a Hotel using SQL Injection Vulnerable Code</a>
+			<br/>
+			<a href="#home" onclick="formSearchHotel(&quot;searchHotelSecure&quot;);" >Search for a Hotel using Secure Code</a>
+		</div>
+		<a name="form" />
+		<div id="FormSection">
+		</div>
+		<h2>Output</h2>
+		<div id="OutputSection">
+		</div>
+	</body>
+	
+</html>
