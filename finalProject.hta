@@ -141,48 +141,6 @@
 				oConnection.Close();
 			}
 
-			/**
-			  A vulnerable code implementation of an SQL parameterized search where the user is supplying
-			  arguments to the SELECT statement. This code is vulnerable to SQL Injection attacks.
-			 
-			  @param (string) strID The section of the HTML page to display the output (e.g. OutputSection).
-			 */
-			function searchHotelUnsecure(strID)
-			{
-				// Access 2007 and Later
-				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "connolly-extended.mdb";
-				
-				// Access 2003 and Earlier
-				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
-				
-				// Open Connection
-				var oConnection = new ActiveXObject("ADODB.Connection");
-				oConnection.Open(strConnection);
-				
-				// Execute a Read Only Query - Subject To SQL INJECTOR Errors
-				var strSQL = new String();
-				strSQL = "SELECT * FROM Hotel WHERE City='" +
-					document.forms("SearchHotel").item("city").value + "' ORDER BY hotelName";
-				var rsQuery = oConnection.Execute(strSQL);
-				
-				// Generate HTML Table with Query Results
-				var strHTML = new String();
-				strHTML += "<table width=\"100%\">"
-				while (!rsQuery.EOF)
-				{
-					strHTML += "<tr><td>" + rsQuery("hotelName") + "</td><td>" +
-						rsQuery("city") + "</td></tr>";
-					rsQuery.MoveNext();
-				}
-				strHTML += "</table>";
-				
-				// Update Current View
-				document.all.item(strID).innerHTML = strHTML;
-				
-				// Conclusions
-				oConnection.Close();
-			}
-
 			// showHotel - Output a List of Hotels to Output Window
 			function showHotel(strID)
 			{
@@ -195,9 +153,7 @@
 				
 				// Open Connection
 				var oConnection = new ActiveXObject("ADODB.Connection");
-				oConnection.Open(strConnection);
-				
-				
+				oConnection.Open(strConnection);				
 				
 				// Execute a Read Only Query
 				var rsQuery = oConnection.Execute("SELECT * FROM Hotel ORDER BY hotelName,city");
@@ -235,25 +191,37 @@
 				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
 				
 				// Access 2003 and Earlier
-				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
+				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "finalProject.accdb";
 				
 				// Open Connection
 				var oConnection = new ActiveXObject("ADODB.Connection");
 				oConnection.Open(strConnection);
 				
-				// Create SQL Statement String
-				var strSQL = new String();
-				strSQL = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter]  ORDER BY [Brew Name]";
-				//AND [Country of Origin] <> NULL
+				// Create SQL Statement String for when search is not empty
+				var strSQL1 = new String();
+				strSQL1 = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter] ORDER BY [Brew Name]";
+				
+				// Create SQL statement for when search is empty
+				var strSQL2 = new String();
+				strSQL2 = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew ORDER BY [Brew Name]";
+				
 				// Prepare Parameterized Command
 				var oCommand = new ActiveXObject("ADODB.Command");
 				oCommand.ActiveConnection = oConnection;
-				oCommand.CommandText = strSQL;
-				var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
 				
 				var filter = document.forms("SearchHotel").item("city").value;
-				parm1.Value = (filter) ? filter : "%";
+				
+				if(filter)
+				{
+				oCommand.CommandText = strSQL1;
+				var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
+				parm1.Value = filter;
 				oCommand.Parameters.Append(parm1);
+				}
+				else
+				{
+				oCommand.CommandText = strSQL2;
+				}
 				
 				// Execute Command and Return Resulting Record Set
 				var rsQuery = oCommand.Execute();
@@ -264,7 +232,8 @@
 				while (!rsQuery.EOF)
 				{
 					var brewID = rsQuery("Brew ID");
-					//var brewID = 99;
+					
+					// register the display report events
 					
 					//"<a href='#' onClick='DisplayReport(99)'>" + brewID + 
 					//"</a>" +
@@ -299,12 +268,6 @@
 		<h2>Select an Option</h2>
 		<div id="MenuSection">
 			<button onclick="formSearchHotel(&quot;exec_query&quot;);" >Show List of Brews and their nationality</button>
-			<br/>
-			<a href="#home" onclick="showHotel(&quot;OutputSection&quot;);" >Show List of Hotels</a>
-			<br/>
-			<a href="#home" onclick="formSearchHotel(&quot;searchHotelUnsecure&quot;);" >Search for a Hotel using SQL Injection Vulnerable Code</a>
-			<br/>
-			<a href="#home" onclick="formSearchHotel(&quot;searchHotelSecure&quot;);" >Search for a Hotel using Secure Code</a>
 		</div>
 		<a name="form" />
 		<div id="FormSection">
