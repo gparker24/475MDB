@@ -76,9 +76,9 @@
 				// Updates the FormSection with an HTML <FORM> for City Name to use in Search
 				var strHTML = new String();
 				strHTML += "<form name=\"SearchHotel\">";
-				strHTML += "<h2>Search for Hotel On City (Secure - Not Vulnerable to SQL Injection)</h2>";
-				strHTML += "<p>City: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
-				strHTML += "<p>Try <em>London</em> (Normal User Input) versus <em>London' OR ''='</em> (SQL Injection Attack)></p>";
+				strHTML += "<h2>Search for Brew On Country of Origin</h2>";
+				strHTML += "<p>Country: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
+				strHTML += "<p>Try <em>Unites States</em></p>";
 				strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
 				strHTML += outputFunction;
 				strHTML += "(&quot;OutputSection&quot;);\">";
@@ -298,7 +298,7 @@
 		<h1>ADO Programming Example</h1>
 		<h2>Select an Option</h2>
 		<div id="MenuSection">
-			<button onclick="formSearchHotel(&quot;exec_query&quot;);" >Show List of Donujts</button>
+			<button onclick="formSearchHotel(&quot;exec_query&quot;);" >Show List of Brews and their nationality</button>
 			<br/>
 			<a href="#home" onclick="showHotel(&quot;OutputSection&quot;);" >Show List of Hotels</a>
 			<br/>
