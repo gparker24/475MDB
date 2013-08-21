@@ -249,7 +249,7 @@
 				var oCommand = new ActiveXObject("ADODB.Command");
 				oCommand.ActiveConnection = oConnection;
 				oCommand.CommandText = strSQL;
-				var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
+				var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50); klgylg
 				
 				var filter = document.forms("SearchHotel").item("city").value;
 				parm1.Value = (filter) ? filter : "%";
