@@ -177,12 +177,50 @@
 				oConnection.Close();
 			}
 			
-			
+			// displays review details for chosen brew (query 5)
 			function DisplayReport(brewID)
 			{
 				var divName = "report" + brewID;
-				//document.all.FormSection.item(divName).innerHTML = brewID;
+				
+				// displays the brew id for the chosen beer
 				document.getElementById(divName).innerHTML = brewID;
+				
+				// Access 2007 and Later
+				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
+				
+				// Access 2003 and Earlier
+				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "finalProject.accdb";
+				
+				// Open Connection
+				var oConnection = new ActiveXObject("ADODB.Connection");
+				oConnection.Open(strConnection);
+												
+				var oCommand = new ActiveXObject("ADODB.Command");
+				oCommand.ActiveConnection = oConnection;
+								
+				// Execute a Read Only Query to find given brew's details (query 5)
+				var rsQuery2 = oConnection.Execute(
+				"SELECT Brew.[Brew Name], Brew.[Country of Origin], [Brew Style].[Brew Style Name], Brew.ABV, Review.[Review Score], Person.[Person Name], [Reviewer Type].[Reviewer Type Name] " + 
+				"FROM ([Brew Style] INNER JOIN Brew ON [Brew Style].[Brew Style ID] = Brew.[Brew Style ID]) INNER JOIN ([Reviewer Type] INNER JOIN (Person INNER JOIN Review " +
+				"ON Person.[Person ID] = Review.[Person ID]) ON [Reviewer Type].[Reviewer Type Code] = Person.[Reviewer Type Code]) ON Brew.[Brew ID] = Review.[Brew ID] WHERE Brew.[Brew ID] = " + brewID + " ORDER BY Brew.[Brew Name]"
+				);
+				
+				// Generate HTML Table with Query Results
+				var strHTML = new String();
+				strHTML += "<table width=\"100%\">"
+				//while (!rsQuery2.EOF)
+				//{
+					strHTML += "<tr><td>" + rsQuery2("Brew Style Name") + "</td><td>" +
+						rsQuery2("ABV") + "</td></tr>" + rsQuery2("Review Score") + "</td></tr>" + rsQuery2("Person Name") + "</td></tr>" + 
+						rsQuery2("Reviewer Type Name") + "</td></tr>";
+				//}
+				strHTML += "</table>";
+				
+				// Update Current View
+				document.all.item(divName).innerHTML = strHTML;
+				
+				// Conclusions
+				oConnection.Close();
 			}
 			
 			function exec_query(strID)
@@ -232,13 +270,7 @@
 				while (!rsQuery.EOF)
 				{
 					var brewID = rsQuery("Brew ID");
-					
-					// register the display report events
-					
-					//"<a href='#' onClick='DisplayReport(99)'>" + brewID + 
-					//"</a>" +
-					//"<div id='report" + brewID + "'></div>" + 
-					
+										
 					strHTML += "<tr><td>" + 
 						"<a href='#form' onClick='DisplayReport(" + brewID + ")'>" +
 						rsQuery("Brew Name") + "</td><td>" + 
