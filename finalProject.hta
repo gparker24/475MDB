@@ -18,22 +18,26 @@
       }
 
       /**
-        Display an HTML <FORM> for getting city name for searching
+        Display an HTML <FORM> for getting country name for searching
         the Brew database. Updates the <DIV> section identified by
         the ID "FormSection" with an HTML<FORM>. Sets up a button 
         
         @param (string) outputFunction The name of the function to call on "Search" button click.
-          
         */
       function formSearchBrew(outputFunction)
       {
-        // Updates the FormSection with an HTML <FORM> for City Name to use in Search
+        // Updates the FormSection with an HTML <FORM> for Country Name to use in Search
         var strHTML = new String();
-        strHTML += "<form name=\"SearchHotel\">";
-        strHTML += "<h2>Search for Brew On Country of Origin</h2>";
-        strHTML += "<p>Country: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
+        strHTML += "<form name=\"BrewSearch\">";
+        strHTML += "<h2>Search for Brews by their Country of Origin</h2>";
+        
+        //hackish way to click a button by pressing enter in the search box
+        strHTML += "<p>Country: " +
+          "<input name='country' type='text' width='50'" +
+          "onkeydown='if (event.keyCode == 13) { document.getElementById(\"btnSearch\").click(); event.returnValue=false; event.cancel=true; }'/></p>";
+          
         strHTML += "<p>Try <em>United States</em></p>";
-        strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
+        strHTML += "<input id='btnSearch' value=\"Filter\" type=\"button\" onClick=\"";
         strHTML += outputFunction;
         strHTML += "(&quot;OutputSection&quot;);\">";
         strHTML += "</form>";
@@ -109,7 +113,7 @@
         var oCommand = new ActiveXObject("ADODB.Command");
         oCommand.ActiveConnection = oConnection;
         
-        var filter = document.forms("SearchHotel").item("city").value;
+        var filter = document.forms("BrewSearch").item("country").value;
         if(filter) // append a where clause for non-empty filter criteria
         {
           strSQL += " WHERE [Country of Origin] LIKE [CountryParameter]";
