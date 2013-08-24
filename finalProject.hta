@@ -1,186 +1,187 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
-	<head>
-		<title>ADO JavaScript Client-Only Access Application</title>
-		
-		<!-- All Code is Contained within the Script Tags -->
-		<script>
-			/**
-			 Return a relative path to the current web page with respect to its source file
-			 
-			 @return (String) the relative file path (directory)
-			 */
-			function getPath()
-			{
-				var strPath = document.URLUnencoded;
-				strPath = strPath.substring(8,strPath.lastIndexOf("/")+1);
-				return strPath;
-			}
- 
- 			/**
- 			  Display an HTML <FORM> for getting city name for searching
- 			  the Brew database. Updates the <DIV> section identified by
- 			  the ID "FormSection" with an HTML<FORM>. Sets up a button 
- 			 
- 			  @param (string) outputFunction The name of the function to call on "Search" button click.
- 		     
- 			 */
- 			function formSearchBrew(outputFunction)
- 			{
- 				// Updates the FormSection with an HTML <FORM> for City Name to use in Search
- 				var strHTML = new String();
- 				strHTML += "<form name=\"SearchHotel\">";
- 				strHTML += "<h2>Search for Brew On Country of Origin</h2>";
- 				strHTML += "<p>Country: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
- 				strHTML += "<p>Try <em>United States</em></p>";
- 				strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
- 				strHTML += outputFunction;
- 				strHTML += "(&quot;OutputSection&quot;);\">";
- 				strHTML += "</form>";
- 				
- 				// Update Current View
- 				document.all.FormSection.innerHTML = strHTML;
- 				document.all.OutputSection.innerHTML = "";
- 			}
+  <head>
+    <title>ADO JavaScript Client-Only Access Application</title>
+    
+    <!-- All Code is Contained within the Script Tags -->
+    <script>
+      /*
+        Return a relative path to the current web page with respect to its source file
+        
+        @return (String) the relative file path (directory)
+      */
+      function getPath()
+      {
+        var strPath = document.URLUnencoded;
+        strPath = strPath.substring(8,strPath.lastIndexOf("/")+1);
+        return strPath;
+      }
+
+      /**
+        Display an HTML <FORM> for getting city name for searching
+        the Brew database. Updates the <DIV> section identified by
+        the ID "FormSection" with an HTML<FORM>. Sets up a button 
+        
+        @param (string) outputFunction The name of the function to call on "Search" button click.
+          
+        */
+      function formSearchBrew(outputFunction)
+      {
+        // Updates the FormSection with an HTML <FORM> for City Name to use in Search
+        var strHTML = new String();
+        strHTML += "<form name=\"SearchHotel\">";
+        strHTML += "<h2>Search for Brew On Country of Origin</h2>";
+        strHTML += "<p>Country: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
+        strHTML += "<p>Try <em>United States</em></p>";
+        strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
+        strHTML += outputFunction;
+        strHTML += "(&quot;OutputSection&quot;);\">";
+        strHTML += "</form>";
+        
+        // Update Current View
+        document.all.FormSection.innerHTML = strHTML;
+        document.all.OutputSection.innerHTML = "";
+      }
 
       
-			// displays review details for chosen brew (query 5)
-			function DisplayReport(brewID)
-			{
-				var divName = "report" + brewID;
-				
-				// displays the brew id for the chosen beer
-				document.getElementById(divName).innerHTML = brewID;
-				
-				// Access 2007 and Later
-				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
-				
-				// Access 2003 and Earlier
-				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "finalProject.accdb";
-				
-				// Open Connection
-				var oConnection = new ActiveXObject("ADODB.Connection");
-				oConnection.Open(strConnection);
-												
-				var oCommand = new ActiveXObject("ADODB.Command");
-				oCommand.ActiveConnection = oConnection;
-				
-				// 19 represents a 4-byte unsigned int, 1 means input parameter
-				var parm = oCommand.CreateParameter("BrewIDParameter", 20, 1);
-				parm.Value = brewID;
-				oCommand.Parameters.Append(parm);
-				
-				var strSQL = new String();
-				
-				strSQL = "SELECT Brew.[Brew Name], Brew.[Country of Origin], [Brew Style].[Brew Style Name], Brew.ABV, Review.[Review Score], Person.[Person Name], [Reviewer Type].[Reviewer Type Name] " + 
-				"FROM ([Brew Style] INNER JOIN Brew ON [Brew Style].[Brew Style ID] = Brew.[Brew Style ID]) INNER JOIN ([Reviewer Type] INNER JOIN (Person INNER JOIN Review " +
-				"ON Person.[Person ID] = Review.[Person ID]) ON [Reviewer Type].[Reviewer Type Code] = Person.[Reviewer Type Code]) ON Brew.[Brew ID] = Review.[Brew ID] WHERE Brew.[Brew ID] = [BrewIDParameter] ORDER BY Brew.[Brew Name]";
-				
-				oCommand.CommandText = strSQL;
-				var rsQuery2 = oCommand.Execute();
-				
-				// Generate HTML Table with Query Results
-				var strHTML = new String();
-				strHTML += "<table width=\"100%\">"
-				{
-					strHTML += "<tr><td>" + 'Style: ' + rsQuery2("Brew Style Name") + 
-            "</td><td>" + 'ABV: ' + rsQuery2("ABV") + 
-            "</td><td>" + 'Review Score: ' + rsQuery2("Review Score") + 
-            "</td><td>" + 'Reviewer: ' + rsQuery2("Person Name") + 
-            "</td><td>" + 'Reviewer Type: ' + rsQuery2("Reviewer Type Name") + "</td></tr>";
-				}
-				strHTML += "</table>";
-				
-				// Update Current View
-				document.all.item(divName).innerHTML = strHTML;
-				
-				// Conclusions
-				oConnection.Close();
-			}
-			
-			function exec_query(strID)
-			{
-				// Access 2007 and Later
-				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
-				
-				// Access 2003 and Earlier
-				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "finalProject.accdb";
-				
-				// Open Connection
-				var oConnection = new ActiveXObject("ADODB.Connection");
-				oConnection.Open(strConnection);
-				
-				// Create SQL Statement String for when search is not empty
-				var strSQLCountryQuery = new String();
-				strSQLCountryQuery = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter] ORDER BY [Brew Name]";
-				
-				// Create SQL statement for when search is empty
-				var strSQLNoCountryQuery = new String();
-				strSQLNoCountryQuery = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew ORDER BY [Brew Name]";
-				
-				// Prepare Parameterized Command
-				var oCommand = new ActiveXObject("ADODB.Command");
-				oCommand.ActiveConnection = oConnection;
-				
-				var filter = document.forms("SearchHotel").item("city").value;
-				if(filter)
-				{
+      // displays review details for chosen brew (query 5)
+      function DisplayReport(brewID)
+      {
+        var divName = "report" + brewID;
+        
+        // displays the brew id for the chosen beer
+        document.getElementById(divName).innerHTML = brewID;
+        
+        // Access 2007 and Later
+        var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
+        
+        // Access 2003 and Earlier
+        // var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "finalProject.accdb";
+        
+        // Open Connection
+        var oConnection = new ActiveXObject("ADODB.Connection");
+        oConnection.Open(strConnection);
+        
+        var oCommand = new ActiveXObject("ADODB.Command");
+        oCommand.ActiveConnection = oConnection;
+        
+        // 19 represents a 4-byte unsigned int, 1 means input parameter
+        var parm = oCommand.CreateParameter("BrewIDParameter", 20, 1);
+        parm.Value = brewID;
+        oCommand.Parameters.Append(parm);
+        
+        var strSQL = new String();
+        
+        strSQL = "SELECT Brew.[Brew Name], Brew.[Country of Origin], [Brew Style].[Brew Style Name], Brew.ABV, Review.[Review Score], Person.[Person Name], [Reviewer Type].[Reviewer Type Name] " + 
+        "FROM ([Brew Style] INNER JOIN Brew ON [Brew Style].[Brew Style ID] = Brew.[Brew Style ID]) INNER JOIN ([Reviewer Type] INNER JOIN (Person INNER JOIN Review " +
+        "ON Person.[Person ID] = Review.[Person ID]) ON [Reviewer Type].[Reviewer Type Code] = Person.[Reviewer Type Code]) ON Brew.[Brew ID] = Review.[Brew ID] WHERE Brew.[Brew ID] = [BrewIDParameter] ORDER BY Brew.[Brew Name]";
+        
+        oCommand.CommandText = strSQL;
+        var rsQuery2 = oCommand.Execute();
+        
+        // Generate HTML Table with Query Results
+        var strHTML = new String();
+        strHTML += "<table width=\"100%\">"
+        {
+          strHTML += "<tr><td>" + 'Style: ' + rsQuery2("Brew Style Name") + 
+          "</td><td>" + 'ABV: ' + rsQuery2("ABV") + 
+          "</td><td>" + 'Review Score: ' + rsQuery2("Review Score") + 
+          "</td><td>" + 'Reviewer: ' + rsQuery2("Person Name") + 
+          "</td><td>" + 'Reviewer Type: ' + rsQuery2("Reviewer Type Name") + "</td></tr>";
+        }
+        strHTML += "</table>";
+        
+        // Update Current View
+        document.all.item(divName).innerHTML = strHTML;
+        
+        // Conclusions
+        oConnection.Close();
+      }
+      
+      function exec_query(strID)
+      {
+        // Access 2007 and Later
+        var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "finalProject.accdb";
+        
+        // Access 2003 and Earlier
+        // var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "finalProject.accdb";
+        
+        // Open Connection
+        var oConnection = new ActiveXObject("ADODB.Connection");
+        oConnection.Open(strConnection);
+        
+        // Create SQL Statement String for when search is not empty
+        var strSQLCountryQuery = new String();
+        strSQLCountryQuery = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter] ORDER BY [Brew Name]";
+        
+        // Create SQL statement for when search is empty
+        var strSQLNoCountryQuery = new String();
+        strSQLNoCountryQuery = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew ORDER BY [Brew Name]";
+        
+        // Prepare Parameterized Command
+        var oCommand = new ActiveXObject("ADODB.Command");
+        oCommand.ActiveConnection = oConnection;
+        
+        var filter = document.forms("SearchHotel").item("city").value;
+        if(filter)
+        {
           oCommand.CommandText = strSQLCountryQuery;
           var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
           parm1.Value = filter;
           oCommand.Parameters.Append(parm1);
-				}
-				else // search for all countries
-				{
+        }
+        else // search for all countries
+        {
           oCommand.CommandText = strSQLNoCountryQuery;
-				}
-				
-				// Execute Command and Return Resulting Record Set
-				var rsQuery = oCommand.Execute();
-				
-				// Generate HTML Table with Query Results
-				var strHTML = new String();
-				strHTML += "<table width=\"100%\">"
-				while (!rsQuery.EOF)
-				{
-					var brewID = rsQuery("Brew ID");
-										
-					strHTML += "<tr><td>" + 
-						"<a href='#form' onClick='DisplayReport(" + brewID + ")'>" +
-              rsQuery("Brew Name") + "</td><td>" + 
-						"</a>" +
-              rsQuery("Country of Origin") + "</td></tr>" +
-						"<tr><td><div id='report" + brewID + "'></div></td></tr>";
-					rsQuery.MoveNext();
-				}
-				strHTML += "</table>";
-				
-				// Update Current View
-				document.all.item(strID).innerHTML = strHTML;
-				
-				// Conclusions
-				oConnection.Close();
-			}
-			
-		</script>
+        }
+        
+        // Execute Command and Return Resulting Record Set
+        var rsQuery = oCommand.Execute();
+        
+        // Generate HTML Table with Query Results
+        var strHTML = new String();
+        strHTML += "<table width=\"100%\">"
+        while (!rsQuery.EOF)
+        {
+          var brewID = rsQuery("Brew ID");
+          
+          strHTML += "<tr><td>" + 
+          "<a href='#form' onClick='DisplayReport(" + brewID + ")'>" +
+          rsQuery("Brew Name") + "</td><td>" + 
+          "</a>" +
+          rsQuery("Country of Origin") + "</td></tr>" +
+          "<tr><td><div id='report" + brewID + "'></div></td></tr>";
+          rsQuery.MoveNext();
+        }
+        strHTML += "</table>";
+        
+        // Update Current View
+        document.all.item(strID).innerHTML = strHTML;
+        
+        // Conclusions
+        oConnection.Close();
+      }
+      
+    </script>
 
-	</head>
-	
-	
-	<!--  Core HTML Page -->
-	<body>
-		<a name="home"/>
-		<h1>ADO Programming Example</h1>
-		<h2>Select an Option</h2>
-		<div id="MenuSection">
-			<button onclick="formSearchBrew(&quot;exec_query&quot;);" >Show List of Brews</button>
-		</div>
-		<a name="form" />
-		<div id="FormSection">
-		</div>
-		<h2>Output</h2>
-		<div id="OutputSection">
-		</div>
-	</body>
-	
+  </head>
+  
+  
+  <!--  Core HTML Page -->
+  <body>
+  <a name="home"/>
+  <h1>Brew Database</h1>
+  <h2>Select an Option</h2>
+  
+  <div id="MenuSection">
+    <button onclick="formSearchBrew(&quot;exec_query&quot;);" >Show List of Brews</button>
+  </div>
+  
+  <a name="form" />
+  <div id="FormSection"></div>
+  
+  <h2>Output</h2>
+  <div id="OutputSection"></div>
+  </body>
+  
 </html>
