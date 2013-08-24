@@ -14,7 +14,7 @@
       {
         var strPath = document.URLUnencoded;
         strPath = strPath.substring(8,strPath.lastIndexOf("/")+1);
-        return strPath;
+        return decodeURIComponent(strPath);
       }
 
       /**
