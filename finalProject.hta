@@ -5,51 +5,6 @@
 		
 		<!-- All Code is Contained within the Script Tags -->
 		<script>
-
-			/** 
-
-				This is simple application written in HTML and JavaScript that uses Microsoft
-				ADO to access Microsoft Access Database and web browser DOM interface to
-				dynamically change this web page. The file extension ".hta" is an HTML
-				application that must be executed using Microsoft Internet Explorer. This
-				example is self-contained-- all code is contained in this single file.
-
-				This application works by display a simple menu of three options with links:
-					Show List of Hotels
-					Search for a Hotel using SQL Injection Vulnerable Code
-					Search for a Hotel using Secure Code
-
-				Each menu option is linked to a JavaScript function using web browser's
-				"onclick=''" event syntax. The onclick code is executed when you click on
-				corresponding menu option link.
-				
-				You should not that the HTML <Body> is divided into three sections using
-				<div> elements-- MenuSection, FormSection, and OutputSection-- each with a
-				unique id="" parameter. This allows the JavaScript code to update the
-				HTML of these 	sections dynamically using web browser DOM reference on
-				innerHTML (document.all.<sectionID>.innerHTML = "new html").
-				
-				Menu Option: Show List of Hotels
-				
-					- Just produces a list of all hotels from database in the OutputSection
-					
-				Menu Options: Search for a Hotel....
-				
-					- Display a HTML Form in the FormSection to gather further input from
-					  the user -- a city name
-					- The form's "Search" button to link to a JavaScript function to process
-					  the form input (city name), execute SQL, and show results in OutputSection
-					- The only difference between the two Search for Hotel options is one using
-					  unsecure (vulnerable) code while the other uses secure coding method.
-				
-				References:
-					HTML				http://www.w3schools.com/html/default.asp
-					JavaScript			http://www.w3schools.com/js/default.asp
-					JavaScript and DOM 	http://www.w3schools.com/js/js_htmldom_html.asp
-					ADO					http://www.w3schools.com/ado/ado_ref_command.asp
-
-			*/
-
 			/**
 			 Return a relative path to the current web page with respect to its source file
 			 
@@ -61,122 +16,34 @@
 				strPath = strPath.substring(8,strPath.lastIndexOf("/")+1);
 				return strPath;
 			}
+ 
+ 			/**
+ 			  Display an HTML <FORM> for getting city name for searching
+ 			  the Brew database. Updates the <DIV> section identified by
+ 			  the ID "FormSection" with an HTML<FORM>. Sets up a button 
+ 			 
+ 			  @param (string) outputFunction The name of the function to call on "Search" button click.
+ 		     
+ 			 */
+ 			function formSearchBrew(outputFunction)
+ 			{
+ 				// Updates the FormSection with an HTML <FORM> for City Name to use in Search
+ 				var strHTML = new String();
+ 				strHTML += "<form name=\"SearchHotel\">";
+ 				strHTML += "<h2>Search for Brew On Country of Origin</h2>";
+ 				strHTML += "<p>Country: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
+ 				strHTML += "<p>Try <em>United States</em></p>";
+ 				strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
+ 				strHTML += outputFunction;
+ 				strHTML += "(&quot;OutputSection&quot;);\">";
+ 				strHTML += "</form>";
+ 				
+ 				// Update Current View
+ 				document.all.FormSection.innerHTML = strHTML;
+ 				document.all.OutputSection.innerHTML = "";
+ 			}
 
-			/**
-			  Display an HTML <FORM> for getting city name for searching
-			  the Hotel database. Updates the <DIV> section identified by
-			  the ID "FormSection" with an HTML<FORM>. Sets up a button 
-			 
-			  @param (string) outputFunction The name of the function to call on "Search" button click.
-		     
-			  @return (string) The relative file path (directory)
-			 */
-			function formSearchHotel(outputFunction)
-			{
-				// Updates the FormSection with an HTML <FORM> for City Name to use in Search
-				var strHTML = new String();
-				strHTML += "<form name=\"SearchHotel\">";
-				strHTML += "<h2>Search for Brew On Country of Origin</h2>";
-				strHTML += "<p>Country: <input name=\"city\" type=\"text\" width=\"50\"/></p>";
-				strHTML += "<p>Try <em>Unites States</em></p>";
-				strHTML += "<input value=\"Search\" type=\"button\" onClick=\"";
-				strHTML += outputFunction;
-				strHTML += "(&quot;OutputSection&quot;);\">";
-				strHTML += "</form>";
-				
-				// Update Current View
-				document.all.FormSection.innerHTML = strHTML;
-				document.all.OutputSection.innerHTML = "";
-		
-			}
-			
-			/**
-			  A secure code implementation of an SQL parameterized search where the user is supplying
-			  arguments to the SELECT statement.
-			 
-			  @param (string) strID The section of the HTML page to display the output (e.g. OutputSection).
-			 */
-			function searchHotelSecure(strID)
-			{
-				// Access 2007 and Later
-				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "connolly-extended.mdb";
-				
-				// Access 2003 and Earlier
-				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
-				
-				// Open Connection
-				var oConnection = new ActiveXObject("ADODB.Connection");
-				oConnection.Open(strConnection);
-				
-				// Create SQL Statement String
-				var strSQL = new String();
-				strSQL = "SELECT * FROM Hotel WHERE City=[CityParameter]ORDER BY hotelName";
-				
-				// Prepare Parameterized Command
-				var oCommand = new ActiveXObject("ADODB.Command");
-				oCommand.ActiveConnection = oConnection;
-				oCommand.CommandText = strSQL;
-				var parm1 = oCommand.CreateParameter("CityParameter",200,1,50);
-				parm1.Value = document.forms("SearchHotel").item("city").value;
-				oCommand.Parameters.Append(parm1);
-				
-				// Execute Command and Return Resulting Record Set
-				var rsQuery = oCommand.Execute();
-				
-				// Generate HTML Table with Query Results
-				var strHTML = new String();
-				strHTML += "<table width=\"100%\">"
-				while (!rsQuery.EOF)
-				{
-					strHTML += "<tr><td>" + rsQuery("hotelName") + "</td><td>" +
-						rsQuery("city") + "</td></tr>";
-					rsQuery.MoveNext();
-				}
-				strHTML += "</table>";
-				
-				// Update Current View
-				document.all.item(strID).innerHTML = strHTML;
-				
-				// Conclusions
-				oConnection.Close();
-			}
-
-			// showHotel - Output a List of Hotels to Output Window
-			function showHotel(strID)
-			{
-				//document.write('hello johnny');
-				// Access 2007 and Later
-				var strConnection = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + getPath() + "connolly-extended.mdb";
-				
-				// Access 2003 and Earlier
-				// var strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + getPath() + "connolly-extended.mdb";
-				
-				// Open Connection
-				var oConnection = new ActiveXObject("ADODB.Connection");
-				oConnection.Open(strConnection);				
-				
-				// Execute a Read Only Query
-				var rsQuery = oConnection.Execute("SELECT * FROM Hotel ORDER BY hotelName,city");
-				
-				// Generate HTML Table with Query Results
-				var strHTML = new String();
-				strHTML += "<table width=\"100%\">"
-				while (!rsQuery.EOF)
-				{
-					strHTML += "<tr><td>" + rsQuery("hotelName") + "</td><td>" +
-						rsQuery("city") + "</td></tr>";
-					rsQuery.MoveNext();
-				}
-				strHTML += "</table>";
-				
-				// Update Current View
-				document.all.FormSection.innerHTML = "";
-				document.all.item(strID).innerHTML = strHTML;
-				
-				// Conclusions
-				oConnection.Close();
-			}
-			
+      
 			// displays review details for chosen brew (query 5)
 			function DisplayReport(brewID)
 			{
@@ -199,9 +66,9 @@
 				oCommand.ActiveConnection = oConnection;
 				
 				// 19 represents a 4-byte unsigned int, 1 means input parameter
-				var parm2 = oCommand.CreateParameter("BrewIDParameter",20,1);
-				parm2.Value = brewID;
-				oCommand.Parameters.Append(parm2);
+				var parm = oCommand.CreateParameter("BrewIDParameter", 20, 1);
+				parm.Value = brewID;
+				oCommand.Parameters.Append(parm);
 				
 				var strSQL = new String();
 				
@@ -216,9 +83,11 @@
 				var strHTML = new String();
 				strHTML += "<table width=\"100%\">"
 				{
-					strHTML += "<tr><td>" + 'Style: ' + rsQuery2("Brew Style Name") + "</td><td>" +
-						'ABV: ' + rsQuery2("ABV") + "</td><td>" + 'Review Score: ' + rsQuery2("Review Score") + "</td><td>" + 
-						'Reviewer: ' + rsQuery2("Person Name") + "</td><td>" + 'Reviewer Type: ' + rsQuery2("Reviewer Type Name") + "</td></tr>";
+					strHTML += "<tr><td>" + 'Style: ' + rsQuery2("Brew Style Name") + 
+            "</td><td>" + 'ABV: ' + rsQuery2("ABV") + 
+            "</td><td>" + 'Review Score: ' + rsQuery2("Review Score") + 
+            "</td><td>" + 'Reviewer: ' + rsQuery2("Person Name") + 
+            "</td><td>" + 'Reviewer Type: ' + rsQuery2("Reviewer Type Name") + "</td></tr>";
 				}
 				strHTML += "</table>";
 				
@@ -242,29 +111,28 @@
 				oConnection.Open(strConnection);
 				
 				// Create SQL Statement String for when search is not empty
-				var strSQL1 = new String();
-				strSQL1 = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter] ORDER BY [Brew Name]";
+				var strSQLCountryQuery = new String();
+				strSQLCountryQuery = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew WHERE [Country of Origin] LIKE [CountryParameter] ORDER BY [Brew Name]";
 				
 				// Create SQL statement for when search is empty
-				var strSQL2 = new String();
-				strSQL2 = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew ORDER BY [Brew Name]";
+				var strSQLNoCountryQuery = new String();
+				strSQLNoCountryQuery = "SELECT [Brew ID], [Brew Name], [Country of Origin] FROM Brew ORDER BY [Brew Name]";
 				
 				// Prepare Parameterized Command
 				var oCommand = new ActiveXObject("ADODB.Command");
 				oCommand.ActiveConnection = oConnection;
 				
 				var filter = document.forms("SearchHotel").item("city").value;
-				
 				if(filter)
 				{
-				oCommand.CommandText = strSQL1;
-				var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
-				parm1.Value = filter;
-				oCommand.Parameters.Append(parm1);
+          oCommand.CommandText = strSQLCountryQuery;
+          var parm1 = oCommand.CreateParameter("CountryParameter",200,1,50);
+          parm1.Value = filter;
+          oCommand.Parameters.Append(parm1);
 				}
-				else
+				else // search for all countries
 				{
-				oCommand.CommandText = strSQL2;
+          oCommand.CommandText = strSQLNoCountryQuery;
 				}
 				
 				// Execute Command and Return Resulting Record Set
@@ -279,9 +147,9 @@
 										
 					strHTML += "<tr><td>" + 
 						"<a href='#form' onClick='DisplayReport(" + brewID + ")'>" +
-						rsQuery("Brew Name") + "</td><td>" + 
+              rsQuery("Brew Name") + "</td><td>" + 
 						"</a>" +
-						rsQuery("Country of Origin") + "</td></tr>" + 
+              rsQuery("Country of Origin") + "</td></tr>" +
 						"<tr><td><div id='report" + brewID + "'></div></td></tr>";
 					rsQuery.MoveNext();
 				}
@@ -305,7 +173,7 @@
 		<h1>ADO Programming Example</h1>
 		<h2>Select an Option</h2>
 		<div id="MenuSection">
-			<button onclick="formSearchHotel(&quot;exec_query&quot;);" >Show List of Brews and their nationality</button>
+			<button onclick="formSearchBrew(&quot;exec_query&quot;);" >Show List of Brews</button>
 		</div>
 		<a name="form" />
 		<div id="FormSection">
